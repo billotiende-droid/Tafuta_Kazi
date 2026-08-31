@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Optional
 from config import settings
 
+
 def generate_url_hash(url: str) -> str:
     """ Generate a normalized MD5 hash for a given job URL to ensure unique tracking."""
     # Strip query parameters, trailing slashes, and lower-case to standardize hashes
@@ -79,10 +80,48 @@ class JobDeduplicator:
                 print(f"[✓] Registered new job: {job_title} at {company}")
                 return url_hash
 
-        except sqlite3.IntergrittyError:
+        except sqlite3.IntegrityError:
             # Safe guard against race conditions or unexpected duplicates
             print(f"[⇄] Integrity check caught duplicate: {url_hash}")
             return None  
-            
+
+        
+    def update_application_status(
+            self, url_hash: str, status: str, pdf_path: Optional[str] = None
+    ) -> bool:
+        """ Update status ('APPROVED' or 'REJECTED') and final PDF path in applications table."""
+        valid_statuses = ('PENDING', 'APPROVED', 'REJECTED')
+        if status not in valid_statuses:
+            raise ValueError(f"Invalid status. Must be one of {valid_statuses}"
+    )
+        
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            if pdf_path:
+                cursor.execute(
+                    """ 
+                    UPDATE applications 
+                    SET status = ?, pdf_path = ?, updated_at = CURRENT_TIMESTAMP
+                    WHERE url_hash = ?;
+                    """,
+                    (status, pdf_path, url_hash)
+                )
+            else:
+                cursor.execute(
+                    """ 
+                    UPDATE applications 
+                    SET status = ?, updated_at = CURRENT_TIMESTAMP
+                    WHERE url_hash = ?;
+                    """,
+                    (status, url_hash)
+                )
+
+            conn.commit()
+            return cursor.rowcount > 0
+
+# Utility instance for direct import across modules
+deduplicator = JobDeduplicator()
+
+         
 
                 
