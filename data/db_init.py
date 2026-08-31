@@ -1,5 +1,9 @@
 import sqlite3
 from pathlib import Path
+import sys
+# Add project root directory to sys.path
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+
 from config import settings
 
 def init_sqlite_db(db_path: Path = settings.DATABASE_PATH) -> None:
