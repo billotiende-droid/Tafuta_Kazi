@@ -1,0 +1,197 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "meta": {
+    "version": "1.0.0",
+    "last_updated": "2026-08-31",
+    "owner": "Bill Otiende",
+    "target_roles": [
+      "Assosciate Frontend Engineer",
+      "Frontend Engineer",
+      "Full Stack Software Engineer",
+      "Software Engineer",
+      "Backend Engineer",
+      "Web Development",
+      "Web Application Architect",
+      "AI Systems Engineer"
+    ]
+  },
+  "personal_info": {
+    "full_name": "Bill Otiende",
+    "title": "Junior Full-Stack Engineer",
+    "location": {
+      "city": "Nairobi",
+      "country": "Kenya",
+      "timezone": "EAT (UTC+3)"
+    },
+    "contact": {
+      "website": "https://bill-otiende-portfolio.vercel.app",
+      "email": "allanbill34@gmail.com",
+      "phone": "+254115943207",
+      "github": "https://github.com/billotiende-droid",
+      "linkedin": "https://www.linkedin.com/in/bill-otiende-6b74193a7/",
+      "portfolio": "https://bill-otiende-portfolio.vercel.app"
+    },
+    "summary": "Full-stack software developer with expertise in building scalable web architectures, modern reactive frontends, and AI-driven automation pipelines. Proven track record in orchestrating multi-vendor platforms, real-time hydrological telemetries, asynchronous payment gateways, and agentic workflows using React, Next.js, FastAPI, Python, and GCP."
+  },
+  "technical_skills": {
+    "languages": ["TypeScript", "JavaScript (ES6+)", "Python", "SQL", "HTML5", "CSS3/Sass", "Bash", "React", "Nextjs", "Nodejs"],
+    "frontend_engineering": [
+      "React.js",
+      "Next.js (App Router & SSR)",
+      "Tailwind CSS",
+      "State Management (Zustand, Redux Toolkit)",
+      "WebSockets",
+      "Responsive & Mobile-First UI Design",
+      "Modular Component Architecture"
+    ],
+    "backend_engineering": [
+      "FastAPI",
+      "Flask",
+      "Django",
+      "Node.js",
+      "Express.js",
+      "RESTful API Design",
+      "Asynchronous I/O (asyncio)",
+      "Pydantic Validation"
+    ],
+    "databases_and_orm": ["PostgreSQL", "SQLite", "SQLAlchemy", "Alembic"],
+    "cloud_and_devops": [
+      "Google Cloud Platform (Cloud Run, Vertex AI)",
+      "Docker & Containerization",
+      "CI/CD Automation",
+      "Vercel",
+      "Git & GitHub Actions"
+    ],
+    "ai_and_automation": [
+      "Gemini API & Vertex AI Integration",
+      "LangGraph / LangChain",
+      "Gmail API Automation",
+      "Agentic Workflow Engineering"
+    ],
+    "testing_and_tooling": ["Playwright", "Cypress", "Jest", "Postman", "Linux (Ubuntu)", "pnpm", "pyenv"]
+  },
+  "core_metrics": {
+    "latency_reduction_percent": 35,
+    "proposal_generation_speedup_x": 10,
+    "system_availability_percent": 99.9,
+    "automated_test_coverage_percent": 88
+  },
+  "work_experience": [
+    {
+      "id": "exp_01",
+      "company": "Sanaa Media Hub",
+      "location": "Nairobi, Kenya",
+      "role": "Lead Systems Architect & Full-Stack Developer",
+      "start_date": "2026-06",
+      "end_date": "2026-08",
+      "employment_type": "Project / Contract",
+      "summary": "Engineered an automated client intake and AI proposal generation platform for media workflows.",
+      "achievements": [
+        "Architected an automated intake pipeline using Python, Vertex AI, and Gmail API, accelerating proposal output speed by 10x.",
+        "Engineered a responsive React dashboard to interface with asynchronous Python backend services for real-time tracking.",
+        "Deployed containerized backend microservices to GCP Cloud Run, maintaining 99.9% uptime and zero-downtime deployments."
+      ],
+      "technologies": ["React", "Python", "Vertex AI", "Gmail API", "GCP Cloud Run", "Docker"]
+    },
+    {
+      "id": "exp_02",
+      "company": "Matatu Route Intelligence Agent (Mzee Router)",
+      "location": "Nairobi, Kenya",
+      "role": "Lead Full-Stack Developer & Systems Architect",
+      "start_date": "2026-05",
+      "end_date": "2026-08",
+      "employment_type": "Contract",
+      "summary": "Designed an AI-powered public transit intelligence web application catering to urban commuters.",
+      "achievements": [
+        "Integrated the Gemini API and Google Maps Platform with Express.js and React, delivering real-time conversational transit routing in Sheng.",
+        "Implemented crowdsourced traffic reporting tools, reducing average route lookup latency by 35%.",
+        "Configured robust caching and spatial query handlers to optimize API usage costs across high-density mapping requests."
+      ],
+      "technologies": ["React", "Tailwind CSS", "Express.js", "Gemini API", "Google Maps API", "GCP"]
+    },
+    {
+      "id": "exp_03",
+      "company": "Quantas API Gateway",
+      "location": "Nairobi, Kenya",
+      "role": "Backend Architect",
+      "start_date": "2026-04",
+      "end_date": "2026-05",
+      "employment_type": "Contract",
+      "summary": "Prototyped a high-concurrency financial settlement engine and management dashboard.",
+      "achievements": [
+        "Built asynchronous settlement pipelines with FastAPI, Pydantic validation, and asyncio to process concurrent transactional loads.",
+        "Developed a modern Next.js management dashboard providing live audit logs and transactional state tracking.",
+        "Enforced strict payload serialization and schema validation, achieving zero critical runtime schema errors during testing."
+      ],
+      "technologies": ["FastAPI", "Python", "Pydantic", "SQLite", "Next.js", "TypeScript"]
+    }
+  ],
+  "projects": [
+    {
+      "name": "WealthLoop",
+      "role": "Full-Stack Engineer",
+      "period": "2026-08",
+      "description": "Wealthtech automation application for financial document parsing and analytics built for the LOOP Innovation Sprint.",
+      "highlights": [
+        "Integrated Gemini API to extract structured financial data from unstructured multi-page documents.",
+        "Engineered high-throughput FastAPI endpoints and a normalized PostgreSQL schema.",
+        "Eliminated Spreadsheet Dependency: Shifted static, manual financial planning into a web-based dashboard,reducing human error and migrating complex calculations into structured PostgreSQL relational schemas",
+        "High-Performance Querying: Optimized backend multi-table SQL queries (JOINs, SELECTs) in FastAPI to aggregate real-time liquidity projections and portfolio analytics without blocking the event loop"
+      ],
+      "stack": ["Next.js", "FastAPI", "Python", "PostgreSQL", "Gemini API", "Tailwind CSS"]
+    },
+    {
+      "name": "Kajiado AquaShield",
+      "role": "Lead Software Engineer",
+      "period": "2026-06",
+      "description": "Real-time hydrology and flood telemetry web application for environmental monitoring.",
+      "highlights": [
+        "Constructed interactive data dashboards visualizing real-time hydrological sensor metrics.",
+        "Built RESTful API pipelines backed by Flask and PostgreSQL."
+      ],
+      "stack": ["React", "TypeScript", "Python", "Flask", "PostgreSQL"]
+    },
+    {
+      "name": "NextGen Foodcourt",
+      "role": "Full-Stack Developer",
+      "period": "2026-01 - 2026-03",
+      "description": "Multi-vendor e-commerce platform facilitating custom vendor storefronts and centralized buyer checkouts.",
+      "highlights": [
+        "Engineered JWT authentication, role-based controls, and transaction endpoints.",
+        "Designed responsive merchant management dashboards using React and Tailwind CSS."
+      ],
+      "stack": ["React", "Next.js", "Flask", "Node.js", "PostgreSQL", "Tailwind CSS"]
+    },
+    {
+      "name": "Safiri Auto",
+      "role": "Frontend Engineer",
+      "period": "2026-03 - 2026-08",
+      "description": "Travel and vehicle rental platform with real-time booking workflows.",
+      "highlights": [
+        "Implemented real-time availability updates using WebSocket connections.",
+        "Achieved sub-100ms UI interaction speeds across search and booking screens."
+      ],
+      "stack": ["React", "Next.js", "WebSockets", "REST APIs"]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Jomo Kenyatta University of Agriculture and Technology (JKUAT)",
+      "degree": "Bachelor of Science in Water and Environmental Engineering",
+      "location": "Nairobi, Kenya",
+      "graduation_year": "2024"
+    }
+  ],
+  "certifications": [
+    {
+      "title": "Full-Stack Web Development",
+      "issuer": "Moringa School",
+      "year": "2025"
+    },
+    {
+      "title": "Artificial Intelligence for Software Engineers",
+      "issuer": "Moringa School",
+      "year": "2026"
+    }
+  ]
+}
