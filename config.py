@@ -70,3 +70,21 @@ class Settings(BaseSettings):
       default=6, description="Execution interval in hours"
     )
 
+    # Pydantic configuration Options
+    model_config = SettingsConfigDict(
+        env_file=str(BASE_DIR / ".env"),
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore",
+    )
+
+    def ensure_directories(self) -> None:
+        """ Creates required data and output directories if they do not exist"""
+        self.DATA_DIR.mkdir(parents=True, exist_ok=True)
+        self.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+        (self.DATA_DIR / "templates").mkdir(parents=True, exist_ok=True)
+
+
+# instantiates singleton configuration instance
+settings = Settings()
+settings.ensure_directories()
