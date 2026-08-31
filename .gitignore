@@ -1,0 +1,15 @@
+# Environment
+.env
+.env.*
+
+# Dependencies
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+site-packages/
+
+# Playwright
+playwright/.local-browsers/
