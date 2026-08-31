@@ -16,3 +16,52 @@ HTTP_HEADERS = {
     ),
     "Accept": "application/json",
 }
+
+class RemoteJobScrapper:
+    """Asynchronous scrapper pulling remote jobs from free REST endpoints."""
+
+    def __init__(self):
+        self.timeout = httpx.Timeout(15.0, connect=5.0)
+
+    async def fetch_remoteok_jobs(self) -> List[Dict[str, Any]]:
+        """ Fetches and parses oublic jobs from RemoteOK API.""" 
+        url = "https://remoteok.io/api"
+        jobs: List[Dict[str, Any]] = []
+
+        try:
+            async with httpx.AsyncClient(
+                headers=HTTP_HEADERS, timeout=self.timeout, follow_redirects=True
+            )  as client:
+                response = await client.get(url)
+                if response.status_code == 200:
+                    data = response.json() 
+                    # First element in RemoteOK JSON payload is API metadata
+                    job_items = data[1:] if isinstance(data,  list) else []
+
+                    for item in job_items:
+                        title = item.get("position", "")
+                        company = item.get("company", "")
+                        job_url = item.get("url", "")
+                        description = item.get("description", "")
+                        tags = [t.lower() for t in item.get("tags", [])]
+
+                        # Relevancy Filter
+                        if self._is_relevant_job(title, description, tags):
+                            jobs.append({
+                                "title": title,
+                                "company": company,
+                                "url": job_url,
+                                "source": "remoteok",
+                                "description": description,
+                                "tags": tags,
+                            
+                            })
+                        else:
+                            logger.warning(
+                                f"RemoteOK API returned status code: {response.status_code}"
+                            ) 
+        except Exception as e:
+            logger.error(f"Error fetching RemoteOK jobs: {e}")
+
+        return jobs              
+
