@@ -13,3 +13,10 @@ site-packages/
 
 # Playwright
 playwright/.local-browsers/
+
+
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
