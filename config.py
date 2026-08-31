@@ -29,14 +29,16 @@ class Settings(BaseSettings):
     # --- Target search Criteria ---
     JOB_TITLES: List[str] = Field(
         default=[
+            "Associate Frontend Developer",
             "Frontend Developer",
-            "React Developer",
+            "Junior React Developer",
             "Python Developer",
             "Backend Engineer",
-            "Fullstack Developer",
+            "Junior Fullstack Developer",
             "Software Engineer",
             "AI Systems Engineer",
             "Web Developer"
+            "UI UX Developer"
 
         ]
     )
