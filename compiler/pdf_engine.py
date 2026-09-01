@@ -44,19 +44,30 @@ class TypstCompilerEngine:
     ) -> Path:
         """Renders tailored data into a temporary Typst file and compiles it to a PDF."""
         candidate_info = tailored_data.get("candidate_info", {})
-        
+        contact = candidate_info.get("contact", {})
+        location_data = candidate_info.get("location", {})
+
+        # Resolve location string from nested dict or plain string
+        if isinstance(location_data, dict):
+            location_str = ", ".join(filter(None, [
+                location_data.get("city", ""),
+                location_data.get("country", ""),
+            ]))
+        else:
+            location_str = str(location_data) if location_data else ""
+
         raw_contacts = [
-            candidate_info.get("email", ""),
-            candidate_info.get("phone", ""),
-            candidate_info.get("location", ""),
-            candidate_info.get("github", ""),
-            candidate_info.get("linkedin", ""),
-            candidate_info.get("portfolio", ""),
+            contact.get("email", ""),
+            contact.get("phone", ""),
+            location_str,
+            contact.get("github", ""),
+            contact.get("linkedin", ""),
+            contact.get("portfolio", ""),
         ]
 
-        # Filter empty entries and escape string contents
+        # Ensure all values are strings before escaping
         valid_contacts = [
-            self._escape_typst(c) for c in raw_contacts if c and str(c).strip()
+            self._escape_typst(str(c)) for c in raw_contacts if c and str(c).strip()
         ]
 
         # Format as valid Typst array syntax (including trailing comma for single items)
@@ -67,7 +78,7 @@ class TypstCompilerEngine:
         else:
             contact_items_str = ", ".join([f'"{c}"' for c in valid_contacts])
 
-        name = self._escape_typst(candidate_info.get("name", "Candidate"))
+        name = self._escape_typst(candidate_info.get("full_name", "Candidate"))
         summary = self._escape_typst(tailored_data.get("professional_summary", ""))
 
         # 1. Base Typst document assembly
