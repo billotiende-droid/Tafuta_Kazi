@@ -1,6 +1,8 @@
 import asyncio
+import json
 import logging
-from typing import Any, Dict, List
+from pathlib import Path
+from typing import Any, Dict, List, Set
 import httpx
 from config import settings
 from ingestion.deduplicator import deduplicator
@@ -8,7 +10,6 @@ from ingestion.deduplicator import deduplicator
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Standard browser User-Agent to avoid client blocks on public endpoints
 HTTP_HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like"
@@ -17,6 +18,50 @@ HTTP_HEADERS = {
     "Accept": "application/json",
 }
 
+
+def _build_profile_keywords(profile_path: Path) -> Set[str]:
+    """Derives a flat lowercase keyword set from profile.json target roles and tech skills."""
+    try:
+        with open(profile_path, "r", encoding="utf-8") as f:
+            profile = json.load(f)
+    except Exception as e:
+        logger.warning(f"Could not load profile.json for keyword extraction: {e}")
+        return set()
+
+    keywords: Set[str] = set()
+
+    # Target roles from meta
+    for role in profile.get("meta", {}).get("target_roles", []):
+        keywords.update(w.lower() for w in role.split())
+
+    # All tech skill values (languages, frameworks, tools)
+    skills = profile.get("technical_skills", {})
+    for skill_list in skills.values():
+        for skill in skill_list:
+            keywords.add(skill.lower())
+
+    return keywords
+
+
+# Build once at module load — avoids re-reading on every request
+_PROFILE_KEYWORDS: Set[str] = _build_profile_keywords(settings.PROFILE_PATH)
+
+# Title-level pre-filter — requires an explicit software/tech signal in the job title
+_TARGET_TITLE_KEYWORDS = [
+    "software", "developer", "engineer", "fullstack", "full-stack", "full stack",
+    "frontend", "front-end", "backend", "back-end", "python", "react", "next.js",
+    "node", "fastapi", "typescript", "javascript", "web developer", "web engineer",
+    "ai engineer", "ml engineer", "systems engineer", "devops", "cloud engineer",
+]
+
+# Explicit blocklist — titles containing these are rejected even if they pass keyword match
+_BLOCKLIST_TITLE_KEYWORDS = [
+    "maintenance", "technician", "estimator", "shunter", "driver", "cleaner",
+    "warehouse", "logistics", "supply chain", "building", "construction",
+    "equipment", "mechanical", "electrical", "plumber", "hvac",
+]
+
+
 class RemoteJobScrapper:
     """Asynchronous scrapper pulling remote jobs from free REST endpoints."""
 
@@ -24,8 +69,8 @@ class RemoteJobScrapper:
         self.timeout = httpx.Timeout(15.0, connect=5.0)
 
     async def fetch_remoteok_jobs(self) -> List[Dict[str, Any]]:
-        """ Fetches and parses oublic jobs from RemoteOK API."""
-        url = "https://remoteok.io/api"
+        """Fetches broad RemoteOK feed and filters Python-side against profile keywords."""
+        url = "https://remoteok.com/api"
         jobs: List[Dict[str, Any]] = []
 
         try:
@@ -35,7 +80,6 @@ class RemoteJobScrapper:
                 response = await client.get(url)
                 if response.status_code == 200:
                     data = response.json()
-                    # First element in RemoteOK JSON payload is API metadata
                     job_items = data[1:] if isinstance(data, list) else []
 
                     for item in job_items:
@@ -45,7 +89,6 @@ class RemoteJobScrapper:
                         description = item.get("description", "")
                         tags = [t.lower() for t in item.get("tags", [])]
 
-                        # Relevancy Filter
                         if self._is_relevant_job(title, description, tags):
                             jobs.append({
                                 "title": title,
@@ -65,8 +108,8 @@ class RemoteJobScrapper:
         return jobs
 
     async def fetch_jobicy_jobs(self) -> List[Dict[str, Any]]:
-        """Fetches public remote dev jobs from Jobicy API."""
-        url = "https://jobicy.com/api/v2/remote-jobs?count=20&geo=apac,emea,latam,usa"
+        """Fetches broad Jobicy feed and filters Python-side against profile keywords."""
+        url = "https://jobicy.com/api/v2/remote-jobs?count=50"
         jobs: List[Dict[str, Any]] = []
 
         try:
@@ -85,7 +128,7 @@ class RemoteJobScrapper:
                         description = item.get("job_description", "")
                         tags = [t.lower() for t in item.get("tags", [])]
 
-                        if self._is_relevant_job(title, description, []):
+                        if self._is_relevant_job(title, description, tags):
                             jobs.append({
                                 "title": title,
                                 "company": company,
@@ -106,14 +149,25 @@ class RemoteJobScrapper:
     def _is_relevant_job(
             self, title: str, description: str, tags: List[str]
     ) -> bool:
-        """ Verifies whether job title or description aligns with keywords in config.py"""
+        """Three-gate relevance check: title keywords → profile keywords → config keywords."""
+        title_lower = title.lower()
         combined_text = f"{title} {description} {' '.join(tags)}".lower()
 
-        #Match target job titles or core tech keywords
-        title_match = any(t.lower() in title.lower() for t in settings.JOB_TITLES)
+        # Gate 1: reject blocklisted non-tech titles immediately
+        if any(kw in title_lower for kw in _BLOCKLIST_TITLE_KEYWORDS):
+            return False
+
+        # Gate 1b: must have at least one software/tech signal in title
+        if not any(kw in title_lower for kw in _TARGET_TITLE_KEYWORDS):
+            return False
+
+        # Gate 2: profile-derived keyword match across full combined text
+        profile_match = any(kw in combined_text for kw in _PROFILE_KEYWORDS)
+
+        # Gate 3: config keyword match (tech stack, contract types)
         keyword_match = any(kw.lower() in combined_text for kw in settings.KEYWORDS)
 
-        return title_match or keyword_match
+        return profile_match or keyword_match
 
 async def scrape_all_new_jobs() -> List[Dict[str, Any]]:
     """ Aggregates jobs across all sources and filters out previously seen duplicates."""
