@@ -15,7 +15,7 @@ class Settings(BaseSettings):
 
     APP_NAME: str = Field(default="TafutaKaziAgent")
     ENV: str = Field(default="production")
-    DEBUG: bool = Field(defalut="False")
+    DEBUG: bool = Field(default=False)
 
     # --- Paths & Local Storage ---
     DATA_DIR: Path = Field(default=BASE_DIR / "data")
@@ -46,7 +46,7 @@ class Settings(BaseSettings):
         default=["Javascript", "React", "Nextjs", "Typescript", "Node.js", "Python", "FastAPI", "PostgreSQL", "LangGraph", "Docker", "Part-time", "contract", "full-time"]
     )
     IS_REMOTE_ONLY: bool = Field(default=True)
-    MAX_JOBS_PER_RUB: int = Field(default=3)
+    MAX_JOBS_PER_RUN: int = Field(default=3)
 
     # --- LLM Provider Settings (Groq API Free Tier) ---
     GROQ_API_KEY: str = Field(
@@ -54,7 +54,7 @@ class Settings(BaseSettings):
     )
 
     LLM_MODEL: str = Field(
-      default="llama-3.3-70b-versatile",
+      default="openai/gpt-oss-120b",
       description="Groq free model deployment identifier",
     )
     LLM_TEMPERATURE: float = Field(default=0.2)
@@ -67,7 +67,7 @@ class Settings(BaseSettings):
       ..., description="Your private numeric Telegram user Chat ID"
     )
 
-  # --- Scheduler Configuration ---
+    # --- Scheduler Configuration ---
     CRON_INTERVAL_HOURS: int = Field(
       default=6, description="Execution interval in hours"
     )
