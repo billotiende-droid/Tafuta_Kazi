@@ -44,10 +44,18 @@ async def generate_pdf_node(state: AgentState) -> Dict[str, Any]:
     output_filename = f"CV_{job['company']}_{url_hash[:8]}.pdf".replace(" ", "_")
     output_path = settings.OUTPUT_DIR / output_filename
 
-    compiled_pdf_path = pdf_compiler.compile_cv(
-        tailored_data=state["tailored_content"], output_path=output_path
-    )
-    return {"pdf_path": str(compiled_pdf_path)}
+    try:
+        compiled_pdf_path = pdf_compiler.compile_cv(
+            tailored_data=state["tailored_content"], output_path=output_path
+        )
+        return {"pdf_path": str(compiled_pdf_path)}
+    except Exception as e:
+        logger.error(
+            f"[Node: Generate PDF] Typst compilation failed for {url_hash}: {e}. Skipping job."
+        )
+        deduplicator.update_application_status(url_hash=url_hash, status="REJECTED")
+        from langgraph.errors import GraphInterrupt
+        raise GraphInterrupt(f"PDF compilation failed: {e}")
 
 
 async def send_telegram_node(state: AgentState) -> Dict[str, Any]:
