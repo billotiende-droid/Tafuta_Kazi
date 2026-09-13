@@ -110,7 +110,8 @@ class CVTailoringEngine:
                     "2. Emphasize matching technical skills, frameworks, and quantifiable results.\n"
                     "3. Ensure bullet points begin with strong action verbs and highlight relevant achievements.\n"
                     "4. You MUST respond with ONLY a valid JSON object. No preamble, no explanation, no markdown fences.\n"
-                    "5. The JSON object MUST follow this exact schema:\n"
+                    "5. Bullet points MUST be plain text only — no brackets [], parentheses (), markdown, or special characters.\n"
+                    "6. The JSON object MUST follow this exact schema:\n"
                     f"{JSON_SCHEMA}"
                 ),
             ),
