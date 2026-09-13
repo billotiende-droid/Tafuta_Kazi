@@ -1,6 +1,4 @@
 import logging
-import os
-import tempfile
 from pathlib import Path
 from typing import Any, Dict, List
 import typst
@@ -21,12 +19,19 @@ class TypstCompilerEngine:
             )
 
     def _escape_typst(self, text: str) -> str:
-        """Escapes special Typst syntax characters in dynamic text strings."""
+        """Escapes all special Typst syntax characters in dynamic text strings."""
         if not text:
             return ""
-        # Escape quotes, backslashes, and Typst markup symbols
-        text = text.replace("\\", "\\\\").replace('"', '\\"')
-        text = text.replace("#", "\\#").replace("$", "\\$").replace("@", "\\@")
+        text = str(text)
+        text = text.replace("\\", "\\\\")  # backslash first
+        text = text.replace('"', '\\"')
+        text = text.replace("#", "\\#")
+        text = text.replace("$", "\\$")
+        text = text.replace("@", "\\@")
+        text = text.replace("[", "\\[")
+        text = text.replace("]", "\\]")
+        text = text.replace("<", "\\<")
+        text = text.replace(">", "\\>")
         return text
 
     def _format_bullets(self, bullets: List[str]) -> str:
@@ -82,7 +87,8 @@ class TypstCompilerEngine:
         summary = self._escape_typst(tailored_data.get("professional_summary", ""))
 
         # 1. Base Typst document assembly
-        typst_code = f"""#import "{self.template_path.resolve()}": cv, cv_section, job_header
+        # Import uses just the filename — temp .typ is written to the same dir as the template
+        typst_code = f"""#import "template.typ": cv, cv_section, job_header
 
 #show: cv.with(
   name: "{name}",
@@ -110,36 +116,32 @@ class TypstCompilerEngine:
         skills = tailored_data.get("skills", [])
         if skills:
             if isinstance(skills, list):
-                escaped_skills = [self._escape_typst(s) for s in skills if s]
+                escaped_skills = [self._escape_typst(str(s)) for s in skills if s]
                 skills_str = ", ".join(escaped_skills)
             else:
                 skills_str = self._escape_typst(str(skills))
 
             typst_code += f"""
 #cv_section("Core Competencies & Technologies")
-{skills_str}
+#par[{skills_str}]
 """
 
-        # 4. Write to temp file and compile PDF
+        # 4. Write temp .typ alongside the template so the import resolves, then compile
         output_path.parent.mkdir(parents=True, exist_ok=True)
-
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".typ", delete=False, encoding="utf-8"
-        ) as tmp_file:
-            tmp_file.write(typst_code)
-            temp_typ_path = tmp_file.name
+        temp_typ_path = self.template_path.parent / f"_cv_{output_path.stem}.typ"
 
         try:
+            temp_typ_path.write_text(typst_code, encoding="utf-8")
             logger.info(f"Compiling Typst PDF to: {output_path}")
-            typst.compile(temp_typ_path, output=str(output_path))
+            typst.compile(str(temp_typ_path), output=str(output_path))
             logger.info("[✓] PDF compilation successful.")
             return output_path
         except Exception as e:
             logger.error(f"Failed to compile Typst document: {e}")
             raise e
         finally:
-            if os.path.exists(temp_typ_path):
-                os.remove(temp_typ_path)
+            if temp_typ_path.exists():
+                temp_typ_path.unlink()
 
 
 # Exported singleton instance
