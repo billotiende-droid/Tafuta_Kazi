@@ -40,15 +40,18 @@ async def run_pipeline_sweep():
                 "approval_status": "PENDING",
             }
 
-            # Unique thread config per job ensures state persistence across interrupt
             config = {"configurable": {"thread_id": f"job_thread_{url_hash}"}}
 
-            # Runs tailor_cv → generate_pdf → send_telegram, then pauses before finalize_application
-            await job_agent_graph.ainvoke(initial_state, config=config)
-
-            logger.info(
-                f"[✓] Initial sweep complete for {url_hash}. Awaiting human Telegram decision."
-            )
+            try:
+                await job_agent_graph.ainvoke(initial_state, config=config)
+                logger.info(
+                    f"[✓] Initial sweep complete for {url_hash}. Awaiting human Telegram decision."
+                )
+            except Exception as e:
+                logger.error(
+                    f"[✗] Job {url_hash} ({job['title']}) failed and was skipped: {e}"
+                )
+                continue
 
     except Exception as e:
         logger.error(f"Error during execution sweep: {e}", exc_info=True)
