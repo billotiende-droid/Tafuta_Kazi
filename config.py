@@ -15,7 +15,7 @@ class Settings(BaseSettings):
 
     APP_NAME: str = Field(default="TafutaKaziAgent")
     ENV: str = Field(default="production")
-    DEBUG: bool = Field(default=False)
+    DEBUG: bool = Field(default=False, alias="APP_DEBUG")
 
     # --- Paths & Local Storage ---
     DATA_DIR: Path = Field(default=BASE_DIR / "data")
