@@ -52,6 +52,7 @@ _TARGET_TITLE_KEYWORDS = [
     "frontend", "front-end", "backend", "back-end", "python", "react", "next.js",
     "node", "fastapi", "typescript", "javascript", "web developer", "web engineer",
     "ai engineer", "ml engineer", "systems engineer", "devops", "cloud engineer",
+    "junior", "associate", "entry level", "entry-level", "graduate",
 ]
 
 # Explicit blocklist — titles containing these are rejected even if they pass keyword match
@@ -59,6 +60,18 @@ _BLOCKLIST_TITLE_KEYWORDS = [
     "maintenance", "technician", "estimator", "shunter", "driver", "cleaner",
     "warehouse", "logistics", "supply chain", "building", "construction",
     "equipment", "mechanical", "electrical", "plumber", "hvac",
+]
+
+# Seniority blocklist — candidate targets associate/mid roles, not principal/staff/lead
+_SENIORITY_BLOCKLIST = [
+    "principal", "staff", "lead", "senior", " sr ", "sr.", "director",
+    "vp ", "vice president", "head of", "manager", "architect",
+]
+
+# Non-English title fragments — reject foreign-language listings
+_NON_ENGLISH_TITLE_FRAGMENTS = [
+    "desarrollador", "développeur", "ingénieur", "ingeniero", "programmeur",
+    "entwickler", "programador", "analista",
 ]
 
 
@@ -157,7 +170,15 @@ class RemoteJobScrapper:
         if any(kw in title_lower for kw in _BLOCKLIST_TITLE_KEYWORDS):
             return False
 
-        # Gate 1b: must have at least one software/tech signal in title
+        # Gate 1b: reject over-seniority roles the candidate is not targeting
+        if any(kw in title_lower for kw in _SENIORITY_BLOCKLIST):
+            return False
+
+        # Gate 1c: reject non-English job titles
+        if any(fragment in title_lower for fragment in _NON_ENGLISH_TITLE_FRAGMENTS):
+            return False
+
+        # Gate 1d: must have at least one software/tech signal in title
         if not any(kw in title_lower for kw in _TARGET_TITLE_KEYWORDS):
             return False
 

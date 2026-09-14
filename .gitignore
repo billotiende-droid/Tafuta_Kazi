@@ -20,3 +20,6 @@ playwright/.local-browsers/
 *.db
 *.sqlite
 *.sqlite3
+
+# Generated outputs
+output/
