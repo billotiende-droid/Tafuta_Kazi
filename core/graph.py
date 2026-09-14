@@ -11,17 +11,69 @@ from ingestion.deduplicator import deduplicator
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+_FIT_THRESHOLD = 40  # minimum match score (%) to proceed to LLM tailoring
+
 
 # 1. State Schema Definition
 class AgentState(TypedDict):
     job_data: Dict[str, Any]
     url_hash: str
+    fit_score: Optional[int]
     tailored_content: Optional[Dict[str, Any]]
     pdf_path: Optional[str]
     approval_status: Optional[str]  # "PENDING", "APPROVED", "REJECTED"
 
 
 # 2. Async Node Implementations
+async def evaluate_fit_node(state: AgentState) -> Dict[str, Any]:
+    """Scores job against candidate profile keywords. Skips LLM if score < threshold."""
+    import json
+    from pathlib import Path
+
+    job = state["job_data"]
+    combined_text = f"{job.get('title','')} {job.get('description','')} {' '.join(job.get('tags', []))}".lower()
+
+    try:
+        with open(settings.PROFILE_PATH, "r", encoding="utf-8") as f:
+            profile = json.load(f)
+    except Exception:
+        profile = {}
+
+    # Build candidate keyword set: target roles + all tech skills
+    candidate_keywords = set()
+    for role in profile.get("meta", {}).get("target_roles", []):
+        candidate_keywords.update(w.lower() for w in role.split())
+    for skill_list in profile.get("technical_skills", {}).values():
+        for skill in skill_list:
+            candidate_keywords.add(skill.lower())
+
+    if not candidate_keywords:
+        return {"fit_score": 100}  # no profile data — let it through
+
+    matched = sum(1 for kw in candidate_keywords if kw in combined_text)
+    score = int((matched / len(candidate_keywords)) * 100)
+
+    logger.info(
+        f"[Node: Evaluate Fit] {job['title']} @ {job['company']} — fit score: {score}% "
+        f"({matched}/{len(candidate_keywords)} keywords matched)"
+    )
+    return {"fit_score": score}
+
+
+def _route_after_fit(state: AgentState) -> str:
+    """Routes to tailor_cv if fit score meets threshold, otherwise ends the thread."""
+    score = state.get("fit_score", 0)
+    if score >= _FIT_THRESHOLD:
+        return "tailor_cv"
+    logger.info(
+        f"[Router] Fit score {score}% below threshold {_FIT_THRESHOLD}% — skipping job."
+    )
+    deduplicator.update_application_status(
+        url_hash=state["url_hash"], status="REJECTED"
+    )
+    return END
+
+
 async def tailor_cv_node(state: AgentState) -> Dict[str, Any]:
     """Tailors CV content against job description using Groq API."""
     job = state["job_data"]
@@ -76,7 +128,10 @@ async def send_telegram_node(state: AgentState) -> Dict[str, Any]:
 
 async def finalize_application_node(state: AgentState) -> Dict[str, Any]:
     """Updates database logs based on human approval/rejection decision."""
-    url_hash = state["url_hash"]
+    url_hash = state.get("url_hash")
+    if not url_hash:
+        logger.warning("[Node: Finalize] url_hash missing from state — cannot update DB.")
+        return {}
     status = state.get("approval_status", "REJECTED")
     pdf_path = state.get("pdf_path")
 
@@ -93,12 +148,14 @@ async def finalize_application_node(state: AgentState) -> Dict[str, Any]:
 def build_agent_graph():
     builder = StateGraph(AgentState)
 
+    builder.add_node("evaluate_fit", evaluate_fit_node)
     builder.add_node("tailor_cv", tailor_cv_node)
     builder.add_node("generate_pdf", generate_pdf_node)
     builder.add_node("send_telegram", send_telegram_node)
     builder.add_node("finalize_application", finalize_application_node)
 
-    builder.set_entry_point("tailor_cv")
+    builder.set_entry_point("evaluate_fit")
+    builder.add_conditional_edges("evaluate_fit", _route_after_fit)
     builder.add_edge("tailor_cv", "generate_pdf")
     builder.add_edge("generate_pdf", "send_telegram")
     builder.add_edge("send_telegram", "finalize_application")

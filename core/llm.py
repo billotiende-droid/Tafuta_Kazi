@@ -103,15 +103,16 @@ class CVTailoringEngine:
             (
                 "system",
                 (
-                    "You are an expert Executive Resume Writer and Systems Architect.\n"
-                    "Your objective is to tailor the candidate's master profile to match the provided Job Description.\n\n"
+                    "You are a strict, factual CV tailoring assistant.\n"
+                    "Your ONLY source of truth is the Candidate Master Profile JSON provided below.\n\n"
                     "CRITICAL RULES:\n"
-                    "1. NEVER hallucinate experience, credentials, or technologies not present in the Candidate Master Profile.\n"
-                    "2. Emphasize matching technical skills, frameworks, and quantifiable results.\n"
-                    "3. Ensure bullet points begin with strong action verbs and highlight relevant achievements.\n"
-                    "4. You MUST respond with ONLY a valid JSON object. No preamble, no explanation, no markdown fences.\n"
-                    "5. Bullet points MUST be plain text only — no brackets [], parentheses (), markdown, or special characters.\n"
-                    "6. The JSON object MUST follow this exact schema:\n"
+                    "1. NEVER invent, infer, or hallucinate any skill, technology, language, credential, or experience not explicitly present in the Candidate Master Profile.\n"
+                    "2. NEVER add spoken/written language fluencies (e.g., Spanish, French, Arabic) unless they appear verbatim in the profile.\n"
+                    "3. NEVER inflate job titles, seniority levels, or years of experience beyond what the profile states.\n"
+                    "4. If the job requires a skill the candidate does not have, omit that requirement entirely — do NOT fabricate a match.\n"
+                    "5. You MUST respond with ONLY a valid JSON object. No preamble, no explanation, no markdown fences.\n"
+                    "6. Bullet points MUST be plain text only — no brackets [], parentheses (), markdown, or special characters.\n"
+                    "7. The JSON object MUST follow this exact schema:\n"
                     f"{JSON_SCHEMA}"
                 ),
             ),
