@@ -119,6 +119,22 @@ async def handle_callback_query(
 
     thread_config = {"configurable": {"thread_id": f"job_thread_{url_hash}"}}
 
+    # Guard against stale callbacks (process restarted, MemorySaver lost checkpoint)
+    existing_state = job_agent_graph.get_state(thread_config)
+    if not existing_state.values or "url_hash" not in existing_state.values:
+        logger.warning(
+            f"[Bot] No live checkpoint for thread job_thread_{url_hash} — "
+            "process may have restarted. Marking REJECTED in DB and ignoring."
+        )
+        from ingestion.deduplicator import deduplicator
+        deduplicator.update_application_status(url_hash=url_hash, status="REJECTED")
+        await query.edit_message_caption(
+            caption=f"{original_caption}\n\n⚠️ *Session expired — decision could not be applied.*",
+            parse_mode="Markdown",
+            reply_markup=None,
+        )
+        return
+
     # Inject human decision into the checkpointed graph state
     job_agent_graph.update_state(
         thread_config,
