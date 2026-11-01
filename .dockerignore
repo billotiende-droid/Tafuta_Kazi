@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environment — dependencies are installed via requirements.txt in the build stage
+venv/
+.venv/
+env/
+
+# Local secrets — never bake credentials into the image.
+# On Cloud Run these are injected via Secret Manager environment variables.
+.env
+
+# SQLite database — Cloud Run containers are ephemeral. The DB lives on a
+# mounted volume or Cloud SQL in production, not baked into the image.
+*.db
+
+# Generated PDFs — output/ is written at runtime, not part of the image
+output/
+
+# Dev tooling
+.git/
+.gitignore
+README.md
+*.md
