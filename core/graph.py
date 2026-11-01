@@ -1,6 +1,7 @@
 import logging
+import sqlite3
 from typing import Any, Dict, Optional, TypedDict
-from langgraph.checkpoint.memory import MemorySaver
+from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.graph import END, StateGraph
 from compiler.pdf_engine import pdf_compiler
 from config import settings
@@ -161,11 +162,20 @@ def build_agent_graph():
     builder.add_edge("send_telegram", "finalize_application")
     builder.add_edge("finalize_application", END)
 
-    memory = MemorySaver()
+    # SqliteSaver persists graph checkpoints to jobs.db so that Telegram
+    # approve/reject callbacks can resume the correct thread even after a
+    # container restart. MemorySaver would lose all pending approvals on redeploy.
+    #
+    # check_same_thread=False is required because the bot callback handler and
+    # the pipeline sweep run on the same asyncio event loop but SQLite's default
+    # connection is not safe to share across threads without this flag.
+    conn = sqlite3.connect(str(settings.DATABASE_PATH), check_same_thread=False)
+    checkpointer = SqliteSaver(conn)
 
-    # Halt execution before finalize_application node for human approval
+    # Halt execution before finalize_application node — graph waits here until
+    # the user presses Approve or Reject in Telegram.
     return builder.compile(
-        checkpointer=memory, interrupt_before=["finalize_application"]
+        checkpointer=checkpointer, interrupt_before=["finalize_application"]
     )
 
 
